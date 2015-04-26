@@ -1,0 +1,38 @@
+---
+title: "Practical Machine Learning Project"
+author: "Nigel AR Henry"
+date: "Sunday, April 26, 2015"
+---
+
+The pml dataset had 19622 records each with 160 variables
+
+Certain variables were assumed to have no predictive value, e.g.: user, start time, stop time, etc.  These were filtered out.  A random forest model was run on the remaining variables.
+
+````{r,echo=FALSE}
+setwd("~/coursera")
+library(caret)
+set.seed(1);
+
+donotuse<-read.csv("pml-testing.csv")
+````
+
+````{r}
+pml<-read.csv("pml-training.csv")
+varstouse = c(8:11, 37:49,  60:68,  84:86, 102, 113:124, 140, 151:159, 160);
+trainIndex<-createDataPartition(pml$classe, p=0.7, list=FALSE)
+trainset <- pml[trainIndex, varstouse]
+testset <- pml[-trainIndex, varstouse]
+tc <- trainControl(method = "oob", classProbs = TRUE);
+modfit <- train(classe ~ ., method="rf", data=trainset, )
+````
+
+Given the high number of predictors and high number of rows, we expect misclassification to be quite small.
+
+````{r}
+print(modfit)
+confusion<-table(data.frame(modeled=predict(modfit,testset),actual=testset$classe))
+confusion
+sum(diag(confusion))/sum(sum(confusion))
+````
+
+The error on the train set is indeed quite small (less than 0.5%)
